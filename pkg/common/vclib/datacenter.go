@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
@@ -631,6 +632,29 @@ func (dc *Datacenter) DoesFirstClassDiskExist(ctx context.Context, fcdID string)
 
 	klog.Infof("DoesFirstClassDiskExist(%s): NOT FOUND", fcdID)
 	return nil, ErrNoDiskIDFound
+}
+
+func (dc *Datacenter) ExtendFirstClassDisk(ctx context.Context, diskID string, newCapacity int64) error {
+	newClient, err := vslm.NewClient(ctx, dc.Client())
+	if err != nil {
+		return err
+	}
+
+	m := vslm.NewGlobalObjectManager(newClient)
+
+	task, err := m.ExtendDisk(ctx, types.ID{Id: diskID}, newCapacity)
+	if err != nil {
+		klog.Errorf("Extend(%s) failed. Err: %v", diskID, err)
+		return err
+	}
+
+	_, err = task.Wait(ctx, 30 * time.Second)
+	if err != nil {
+		klog.Errorf("Wait(%s) failed. Err: %v", diskID, err)
+		return err
+	}
+
+	return nil
 }
 
 // DeleteFirstClassDisk deletes an FCD.
