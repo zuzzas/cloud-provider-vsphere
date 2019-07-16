@@ -634,7 +634,7 @@ func (dc *Datacenter) DoesFirstClassDiskExist(ctx context.Context, fcdID string)
 	return nil, ErrNoDiskIDFound
 }
 
-func (dc *Datacenter) ExtendFirstClassDisk(ctx context.Context, diskID string, newCapacity int64) error {
+func (dc *Datacenter) ExtendFirstClassDisk(ctx context.Context, diskID string, newCapacityInMB int64) error {
 	newClient, err := vslm.NewClient(ctx, dc.Client())
 	if err != nil {
 		return err
@@ -642,13 +642,15 @@ func (dc *Datacenter) ExtendFirstClassDisk(ctx context.Context, diskID string, n
 
 	m := vslm.NewGlobalObjectManager(newClient)
 
-	task, err := m.ExtendDisk(ctx, types.ID{Id: diskID}, newCapacity)
+	task, err := m.ExtendDisk(ctx, types.ID{Id: diskID}, newCapacityInMB)
+	klog.Warningf("Extending disk %v with newCapacityInMB %v", diskID, newCapacityInMB)
 	if err != nil {
 		klog.Errorf("Extend(%s) failed. Err: %v", diskID, err)
 		return err
 	}
 
-	_, err = task.Wait(ctx, 30 * time.Second)
+	taskResult, err := task.Wait(ctx, 30 * time.Second)
+	klog.Warningf("taskResult: %v", taskResult)
 	if err != nil {
 		klog.Errorf("Wait(%s) failed. Err: %v", diskID, err)
 		return err
