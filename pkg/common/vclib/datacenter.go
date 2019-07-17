@@ -649,7 +649,7 @@ func (dc *Datacenter) ExtendFirstClassDisk(ctx context.Context, diskID string, n
 		return err
 	}
 
-	taskResult, err := task.Wait(ctx, 30 * time.Second)
+	taskResult, err := task.Wait(ctx, 30*time.Second)
 	klog.Warningf("taskResult: %v", taskResult)
 	if err != nil {
 		klog.Errorf("Wait(%s) failed. Err: %v", diskID, err)
@@ -657,6 +657,24 @@ func (dc *Datacenter) ExtendFirstClassDisk(ctx context.Context, diskID string, n
 	}
 
 	return nil
+}
+
+func (dc *Datacenter) CountFirstClassDiskAssociations(ctx context.Context, diskID string) (count int, err error) {
+	newClient, err := vslm.NewClient(ctx, dc.Client())
+	if err != nil {
+		return 0, err
+	}
+
+	m := vslm.NewGlobalObjectManager(newClient)
+
+	associations, err := m.RetrieveAssociations(ctx, []types.ID{{Id: diskID}})
+	klog.Warningf("Associations %v", associations[0].VmDiskAssociation)
+	if err != nil {
+		klog.Errorf("RetrieveAssociations(%s) failed. Err: %v", diskID, err)
+		return 0, err
+	}
+
+	return len(associations[0].VmDiskAssociation), nil
 }
 
 // DeleteFirstClassDisk deletes an FCD.
