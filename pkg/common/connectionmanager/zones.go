@@ -128,23 +128,16 @@ func (cm *ConnectionManager) getDIFromSingleVC(ctx context.Context,
 		}, nil
 	} else {
 		for _, dc := range datacenterObjs {
-
-			klog.Warningf("LUL: %+v", dc)
-			if dc.Name() == dcConfig[0] {
+			if strings.TrimPrefix(dc.Name(), "/") == dcConfig[0] {
 				return &ZoneDiscoveryInfo{
 					VcServer:   vc,
 					DataCenter: dc,
 				}, nil
-			} else {
-				return nil, ErrUnsupportedConfiguration
 			}
 		}
+		return nil, ErrUnsupportedConfiguration
 
 	}
-	return &ZoneDiscoveryInfo{
-		VcServer:   vc,
-		DataCenter: datacenterObjs[0],
-	}, nil
 }
 
 func (cm *ConnectionManager) getDIFromMultiVCorDC(ctx context.Context,
