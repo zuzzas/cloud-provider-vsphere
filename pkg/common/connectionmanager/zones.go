@@ -101,8 +101,13 @@ func (cm *ConnectionManager) getDIFromSingleVC(ctx context.Context,
 		return nil, err
 	}
 
+	var dcConfig []string
+	if tmpVsi.Cfg != nil {
+		dcConfig = strings.Split(tmpVsi.Cfg.Datacenters, ",")
+	}
+
 	// More than 1 DC in this VC
-	if numOfDc > 1 {
+	if (numOfDc > 1 && len(dcConfig) > 1) || (numOfDc > 1 && dcConfig == nil) {
 		klog.Info("Multi Datacenter configuration detected")
 		return cm.getDIFromMultiVCorDC(ctx, zoneLabel, regionLabel, zoneLooking, regionLooking)
 	}
@@ -116,12 +121,28 @@ func (cm *ConnectionManager) getDIFromSingleVC(ctx context.Context,
 		return nil, err
 	}
 
-	discoveryInfo := &ZoneDiscoveryInfo{
+	if dcConfig == nil {
+		return &ZoneDiscoveryInfo{
+			VcServer:   vc,
+			DataCenter: datacenterObjs[0],
+		}, nil
+	} else {
+		for _, dc := range datacenterObjs {
+			if dc.Name() == dcConfig[0] {
+				return &ZoneDiscoveryInfo{
+					VcServer:   vc,
+					DataCenter: dc,
+				}, nil
+			} else {
+				return nil, ErrUnsupportedConfiguration
+			}
+		}
+
+	}
+	return &ZoneDiscoveryInfo{
 		VcServer:   vc,
 		DataCenter: datacenterObjs[0],
-	}
-
-	return discoveryInfo, nil
+	}, nil
 }
 
 func (cm *ConnectionManager) getDIFromMultiVCorDC(ctx context.Context,
