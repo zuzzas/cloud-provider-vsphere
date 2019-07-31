@@ -102,7 +102,6 @@ func (cm *ConnectionManager) getDIFromSingleVC(ctx context.Context,
 	}
 
 	var dcConfig []string
-	klog.Warningf("LUL: %v+", tmpVsi.Cfg)
 	if tmpVsi.Cfg != nil {
 		dcConfig = strings.Split(tmpVsi.Cfg.Datacenters, ",")
 	}
@@ -129,6 +128,8 @@ func (cm *ConnectionManager) getDIFromSingleVC(ctx context.Context,
 		}, nil
 	} else {
 		for _, dc := range datacenterObjs {
+
+			klog.Warningf("LUL: %+v", dc)
 			if dc.Name() == dcConfig[0] {
 				return &ZoneDiscoveryInfo{
 					VcServer:   vc,
