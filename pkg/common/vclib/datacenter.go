@@ -496,7 +496,7 @@ func (dc *Datacenter) CreateFirstClassDisk(ctx context.Context,
 			VslmCreateSpecBackingSpec: types.VslmCreateSpecBackingSpec{
 				Datastore: ds,
 			},
-			ProvisioningType: string(types.BaseConfigInfoDiskFileBackingInfoProvisioningTypeThin),
+			ProvisioningType: string(types.BaseConfigInfoDiskFileBackingInfoProvisioningTypeLazyZeroedThick),
 		},
 	}
 
