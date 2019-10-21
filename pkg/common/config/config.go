@@ -227,6 +227,15 @@ func (cfg *Config) FromEnv() error {
 				ipFamily = cfg.Global.IPFamily
 			}
 
+			_, internalNetworkName, errInternalNetworkName := getEnvKeyValue("VCENTER_"+id+"_INTERNAL_NETWORK_NAME", false)
+			if errInternalNetworkName != nil {
+				internalNetworkName = cfg.Global.InternalNetworkName
+			}
+			_, externalNetworkName, errExternalNetworkName := getEnvKeyValue("VCENTER_"+id+"_EXTERNAL_NETWORK_NAME", false)
+			if errExternalNetworkName != nil {
+				externalNetworkName = cfg.Global.ExternalNetworkName
+			}
+
 			// If server is explicitly set, that means the vcenter value above is the TenantRef
 			vcenterIP := vcenter
 			tenantRef := vcenter
@@ -236,40 +245,44 @@ func (cfg *Config) FromEnv() error {
 			}
 
 			cfg.VirtualCenter[tenantRef] = &VirtualCenterConfig{
-				User:              username,
-				Password:          password,
-				TenantRef:         tenantRef,
-				VCenterIP:         vcenterIP,
-				VCenterPort:       port,
-				InsecureFlag:      insecureFlag,
-				Datacenters:       datacenters,
-				RoundTripperCount: roundtrip,
-				CAFile:            caFile,
-				Thumbprint:        thumbprint,
-				SecretRef:         secretRef,
-				SecretName:        secretName,
-				SecretNamespace:   secretNamespace,
-				IPFamily:          ipFamily,
+				User:                username,
+				Password:            password,
+				TenantRef:           tenantRef,
+				VCenterIP:           vcenterIP,
+				VCenterPort:         port,
+				InsecureFlag:        insecureFlag,
+				Datacenters:         datacenters,
+				RoundTripperCount:   roundtrip,
+				CAFile:              caFile,
+				Thumbprint:          thumbprint,
+				SecretRef:           secretRef,
+				SecretName:          secretName,
+				SecretNamespace:     secretNamespace,
+				IPFamily:            ipFamily,
+				InternalNetworkName: internalNetworkName,
+				ExternalNetworkName: externalNetworkName,
 			}
 		}
 	}
 
 	if cfg.Global.VCenterIP != "" && cfg.VirtualCenter[cfg.Global.VCenterIP] == nil {
 		cfg.VirtualCenter[cfg.Global.VCenterIP] = &VirtualCenterConfig{
-			User:              cfg.Global.User,
-			Password:          cfg.Global.Password,
-			TenantRef:         cfg.Global.VCenterIP,
-			VCenterIP:         cfg.Global.VCenterIP,
-			VCenterPort:       cfg.Global.VCenterPort,
-			InsecureFlag:      cfg.Global.InsecureFlag,
-			Datacenters:       cfg.Global.Datacenters,
-			RoundTripperCount: cfg.Global.RoundTripperCount,
-			CAFile:            cfg.Global.CAFile,
-			Thumbprint:        cfg.Global.Thumbprint,
-			SecretRef:         DefaultCredentialManager,
-			SecretName:        cfg.Global.SecretName,
-			SecretNamespace:   cfg.Global.SecretNamespace,
-			IPFamily:          cfg.Global.IPFamily,
+			User:                cfg.Global.User,
+			Password:            cfg.Global.Password,
+			TenantRef:           cfg.Global.VCenterIP,
+			VCenterIP:           cfg.Global.VCenterIP,
+			VCenterPort:         cfg.Global.VCenterPort,
+			InsecureFlag:        cfg.Global.InsecureFlag,
+			Datacenters:         cfg.Global.Datacenters,
+			RoundTripperCount:   cfg.Global.RoundTripperCount,
+			CAFile:              cfg.Global.CAFile,
+			Thumbprint:          cfg.Global.Thumbprint,
+			SecretRef:           DefaultCredentialManager,
+			SecretName:          cfg.Global.SecretName,
+			SecretNamespace:     cfg.Global.SecretNamespace,
+			IPFamily:            cfg.Global.IPFamily,
+			InternalNetworkName: cfg.Global.InternalNetworkName,
+			ExternalNetworkName: cfg.Global.ExternalNetworkName,
 		}
 	}
 
@@ -335,21 +348,23 @@ func (cfg *Config) validateConfig() error {
 	// VirtualCenter does not already exist in the map
 	if cfg.Global.VCenterIP != "" && cfg.VirtualCenter[cfg.Global.VCenterIP] == nil {
 		vcConfig := &VirtualCenterConfig{
-			User:              cfg.Global.User,
-			Password:          cfg.Global.Password,
-			TenantRef:         cfg.Global.VCenterIP,
-			VCenterIP:         cfg.Global.VCenterIP,
-			VCenterPort:       cfg.Global.VCenterPort,
-			InsecureFlag:      cfg.Global.InsecureFlag,
-			Datacenters:       cfg.Global.Datacenters,
-			RoundTripperCount: cfg.Global.RoundTripperCount,
-			CAFile:            cfg.Global.CAFile,
-			Thumbprint:        cfg.Global.Thumbprint,
-			SecretRef:         DefaultCredentialManager,
-			SecretName:        cfg.Global.SecretName,
-			SecretNamespace:   cfg.Global.SecretNamespace,
-			IPFamily:          cfg.Global.IPFamily,
-			IPFamilyPriority:  ipFamilyPriority,
+			User:                cfg.Global.User,
+			Password:            cfg.Global.Password,
+			TenantRef:           cfg.Global.VCenterIP,
+			VCenterIP:           cfg.Global.VCenterIP,
+			VCenterPort:         cfg.Global.VCenterPort,
+			InsecureFlag:        cfg.Global.InsecureFlag,
+			Datacenters:         cfg.Global.Datacenters,
+			RoundTripperCount:   cfg.Global.RoundTripperCount,
+			CAFile:              cfg.Global.CAFile,
+			Thumbprint:          cfg.Global.Thumbprint,
+			SecretRef:           DefaultCredentialManager,
+			SecretName:          cfg.Global.SecretName,
+			SecretNamespace:     cfg.Global.SecretNamespace,
+			IPFamily:            cfg.Global.IPFamily,
+			IPFamilyPriority:    ipFamilyPriority,
+			InternalNetworkName: cfg.Global.InternalNetworkName,
+			ExternalNetworkName: cfg.Global.ExternalNetworkName,
 		}
 		cfg.VirtualCenter[cfg.Global.VCenterIP] = vcConfig
 	}
@@ -432,6 +447,13 @@ func (cfg *Config) validateConfig() error {
 		insecure := vcConfig.InsecureFlag
 		if !insecure {
 			vcConfig.InsecureFlag = cfg.Global.InsecureFlag
+		}
+
+		if vcConfig.InternalNetworkName == "" {
+			vcConfig.InternalNetworkName = cfg.Global.InternalNetworkName
+		}
+		if vcConfig.ExternalNetworkName == "" {
+			vcConfig.ExternalNetworkName = cfg.Global.ExternalNetworkName
 		}
 	}
 

@@ -59,6 +59,10 @@ type Config struct {
 		// ipv4 - IPv4 addresses only (Default)
 		// ipv6 - IPv6 addresses only
 		IPFamily string `gcfg:"ip-family"`
+		// VirtualMachine network interfaces backed by the following vSphere Networks
+		// will be used in respective status.addresses fields
+		InternalNetworkName string `gcfg:"internal-network-name"`
+		ExternalNetworkName string `gcfg:"external-network-name"`
 	}
 
 	// Virtual Center configurations
@@ -113,4 +117,8 @@ type VirtualCenterConfig struct {
 	IPFamily string `gcfg:"ip-family"`
 	// IPFamilyPriority (intentionally not exposed via the config) the list/priority of IP versions
 	IPFamilyPriority []string
+	// VirtualMachine network interfaces backed by the following vSphere Networks
+	// will be used in respective status.addresses fields
+	InternalNetworkName string `gcfg:"internal-network-name"`
+	ExternalNetworkName string `gcfg:"external-network-name"`
 }
