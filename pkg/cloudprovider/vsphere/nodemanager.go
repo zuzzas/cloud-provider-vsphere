@@ -190,11 +190,27 @@ func (nm *NodeManager) DiscoverNode(nodeID string, searchBy cm.FindVM) error {
 		klog.Warningf("Unable to find vcInstance for %s. Defaulting to ipv4.", tenantRef)
 	}
 
+	// TODO: Abstract networkNameDiscovery process into a function
+	var networkNameDiscovery bool
+	if vcInstance != nil {
+		if vcInstance.Cfg.InternalNetworkName != "" && vcInstance.Cfg.ExternalNetworkName != "" {
+			networkNameDiscovery = true
+		} else {
+			klog.V(2).Infof("\"internal-network-name\" or \"external-network-name\" not specified, skipping networkName-based IP address detection")
+		}
+	} else {
+		klog.V(2).Infof("Unable to find vcInstance for %s, skipping networkName-based IP address detection", tenantRef)
+	}
 	found := false
 	addrs := []v1.NodeAddress{}
 	for _, v := range oVM.Guest.Net {
 		if v.DeviceConfigId == -1 {
 			klog.V(4).Info("Skipping device because not a vNIC")
+			continue
+		}
+
+		if networkNameDiscovery && v.Network == "" {
+			klog.V(4).Info("Skipping device because networkName-based IP address detection is enabled and the \"Network\" field is not set on vNIC")
 			continue
 		}
 
@@ -204,23 +220,57 @@ func (nm *NodeManager) DiscoverNode(nodeID string, searchBy cm.FindVM) error {
 		for _, family := range ipFamily {
 			ips := returnIPsFromSpecificFamily(family, v.IpAddress)
 
-			for _, ip := range ips {
-				klog.V(2).Infof("Adding IP: %s", ip)
+			if networkNameDiscovery {
+				klog.V(2).Infof("Adding Hostname: %s")
 				v1helper.AddToNodeAddresses(&addrs,
 					v1.NodeAddress{
-						Type:    v1.NodeExternalIP,
-						Address: ip,
-					}, v1.NodeAddress{
-						Type:    v1.NodeInternalIP,
-						Address: ip,
-					}, v1.NodeAddress{
 						Type:    v1.NodeHostName,
 						Address: oVM.Guest.HostName,
 					},
 				)
 
-				found = true
-				break
+				if v.Network == vcInstance.Cfg.InternalNetworkName {
+					for _, ip := range ips {
+						klog.V(2).Infof("Adding Internal IP: %s", ip)
+						v1helper.AddToNodeAddresses(&addrs,
+							v1.NodeAddress{
+								Type:    v1.NodeInternalIP,
+								Address: ip,
+							},
+						)
+						break
+					}
+				}
+				if v.Network == vcInstance.Cfg.ExternalNetworkName {
+					for _, ip := range ips {
+						klog.V(2).Infof("Adding External IP: %s", ip)
+						v1helper.AddToNodeAddresses(&addrs,
+							v1.NodeAddress{
+								Type:    v1.NodeExternalIP,
+								Address: ip,
+							},
+						)
+						break
+					}
+				}
+			} else {
+				for _, ip := range ips {
+					klog.V(2).Infof("Adding IP: %s", ip)
+					v1helper.AddToNodeAddresses(&addrs,
+						v1.NodeAddress{
+							Type:    v1.NodeExternalIP,
+							Address: ip,
+						}, v1.NodeAddress{
+							Type:    v1.NodeInternalIP,
+							Address: ip,
+						}, v1.NodeAddress{
+							Type:    v1.NodeHostName,
+							Address: oVM.Guest.HostName,
+						},
+					)
+					found = true
+					break
+				}
 			}
 
 			if found {

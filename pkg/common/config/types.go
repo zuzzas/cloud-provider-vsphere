@@ -113,4 +113,7 @@ type VirtualCenterConfig struct {
 	IPFamily string `gcfg:"ip-family"`
 	// IPFamilyPriority (intentionally not exposed via the config) the list/priority of IP versions
 	IPFamilyPriority []string
+	// TODO: Replace this ugly hack with something coherent to the codebase
+	InternalNetworkName string `gcfg:"internal-network-name"`
+	ExternalNetworkName string `gcfg:"external-network-name"`
 }
