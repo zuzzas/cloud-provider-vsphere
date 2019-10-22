@@ -26,7 +26,6 @@ require (
 	github.com/golang/protobuf v1.2.0
 	github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
-	github.com/google/uuid v0.0.0-20161128191214-064e2069ce9c // indirect
 	github.com/googleapis/gnostic v0.2.0 // indirect
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
@@ -58,7 +57,7 @@ require (
 	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
 	github.com/ugorji/go v1.1.1 // indirect
-	github.com/vmware/govmomi v0.20.0
+	github.com/vmware/govmomi v0.21.1-0.20191021230255-674286cbacce
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
 	go.etcd.io/bbolt v1.3.2 // indirect
 	golang.org/x/net v0.0.0-20181220203305-927f97764cc3
